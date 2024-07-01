@@ -27,15 +27,15 @@ function App()
 
     const moveSprite = () => {
 
-        if(phaserRef.current)
+        if(phaserRef.current) //(o-o) maybe default
         {
 
-            const scene = phaserRef.current.scene as MainMenu;
+            const scene = phaserRef.current.scene as MainMenu; //(o-o) maybe default, why mainmenu though...
 
             if (scene && scene.scene.key === 'MainMenu')
             {
                 // Get the update logo position
-                scene.moveLogo(({ x, y }) => {
+                scene.moveLogo(({ x, y }) => { //(o-o) simply calls movelogo function that takes a function as an argument. changes logo position
 
                     setSpritePosition({ x, y });
 
@@ -45,11 +45,11 @@ function App()
 
     }
 
-    const addSprite = () => {
+    const addSprite = () => { //(o-o) simply adds and animates star.png
 
-        if (phaserRef.current)
+        if (phaserRef.current) //(o-o) maybe default
         {
-            const scene = phaserRef.current.scene;
+            const scene = phaserRef.current.scene as MainMenu; //(o-o) maybe default
 
             if (scene)
             {
@@ -58,7 +58,7 @@ function App()
                 const y = Phaser.Math.Between(64, scene.scale.height - 64);
     
                 //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
-                const star = scene.add.sprite(x, y, 'star');
+                const star = scene.add.sprite(x, y, 'star'); //(o-o) simply load star.png at random x,y position
     
                 //  ... which you can then act upon. Here we create a Phaser Tween to fade the star sprite in and out.
                 //  You could, of course, do this from within the Phaser Scene code, but this is just an example
@@ -69,7 +69,7 @@ function App()
                     alpha: 0,
                     yoyo: true,
                     repeat: -1
-                });
+                }); //(o-o) simply animate that image
             }
         }
     }
@@ -92,7 +92,7 @@ function App()
                     <button disabled={canMoveSprite} className="button" onClick={moveSprite}>Toggle Movement</button>
                 </div>
                 <div className="spritePosition">Sprite Position:
-                    <pre>{`{\n  x: ${spritePosition.x}\n  y: ${spritePosition.y}\n}`}</pre>
+                    <pre>{`{\n  x: ${spritePosition.x}\n  y: ${spritePosition.y}\n}`}</pre> {/* shows logo position */}
                 </div>
                 <div>
                     <button className="button" onClick={addSprite}>Add New Sprite</button>

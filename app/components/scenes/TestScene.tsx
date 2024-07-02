@@ -8,20 +8,17 @@ export class TestScene extends Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private curvePoints!: Phaser.Math.Vector2[];
   private curveProgress: number = 0;
-//   camera!: Phaser.Cameras.Scene2D.Camera;
-//   background!: Phaser.GameObjects.Image;
-//   TestSceneText!: Phaser.GameObjects.Text;
 
   constructor() {
     super("TestScene");
   }
 
-  preload() {
-    // Load your assets here
-    // this.load.image("snowybg", "path/to/snowybg.png");
-    // this.load.image("snowboarder", "path/to/snowboarder.png");
-    // this.load.image("background", "path/to/background.png");
-  }
+//   preload() {
+//     // Load your assets here
+//     this.load.image("snowybg", "path/to/snowybg.png");
+//     this.load.image("snowboarder", "path/to/snowboarder.png");
+//     this.load.image("background", "path/to/background.png");
+//   }
 
   create() {
     // Create and scale the snowy background
@@ -31,42 +28,24 @@ export class TestScene extends Scene {
     // Add graphics to draw the curve
     this.graphics = this.add.graphics();
     this.curvePoints = [
-      new Phaser.Math.Vector2(-300, 600),
+      new Phaser.Math.Vector2(-300, 100),
       new Phaser.Math.Vector2(-100, 300),
       new Phaser.Math.Vector2(100, 300),
       new Phaser.Math.Vector2(300, 400),
       new Phaser.Math.Vector2(500, 200),
       new Phaser.Math.Vector2(700, 300),
-      new Phaser.Math.Vector2(900, 500),
+      new Phaser.Math.Vector2(900, 200),
       new Phaser.Math.Vector2(1100,400),
       new Phaser.Math.Vector2(1300,400),
       new Phaser.Math.Vector2(1500,100),
     ];
     this.curve = new Phaser.Curves.Spline(this.curvePoints);
     this.graphics.lineStyle(2, 0xffffff, 1);
-    this.curve.draw(this.graphics, 64);
+    this.curve.draw(this.graphics, 128);
 
     // Create the player sprite
     this.player = this.physics.add.sprite(100, 300, "snowboarder").setScale(0.05);
-    this.player.setCollideWorldBounds(true);
-
-    // Set up the camera
-    // this.camera = this.cameras.main;
-    // this.camera.setBackgroundColor(0xff0000);
-
-    // Add a semi-transparent background image
-    // this.background = this.add.image(512, 384, "background");
-    // this.background.setAlpha(0.5);
-
-    // Add "Game Over" text
-    // this.TestSceneText = this.add.text(512, 384, "Game Over", {
-    //   fontFamily: "Arial Black",
-    //   fontSize: 64,
-    //   color: "#ffffff",
-    //   stroke: "#000000",
-    //   strokeThickness: 8,
-    //   align: "center",
-    // }).setOrigin(0.5).setDepth(100);
+    // this.player.setCollideWorldBounds(true);
 
     // Emit an event to notify that the current scene is ready
     EventBus.emit("current-scene-ready", this);
@@ -85,11 +64,32 @@ export class TestScene extends Scene {
       this.curveProgress -= 1;
     }
     const point = this.curve.getPoint(this.curveProgress);
-    // this.player.x = point.x;
-    // this.player.y = point.y;
-    let temp = this.getYForX(this.player.x);
-    this.player.y = temp==null?this.player.y:temp;
+    const temp = this.getYForX(this.player.x);
+    this.player.y = temp == null ? this.player.y : (temp-25);
 
+    // Calculate the tangent of the curve at the current position
+    // const tangent = this.curve.getTangent(this.curveProgress);
+    // const temp2 = this.getYForX(this.player.x+1);
+    // const tangent = (temp2 == null ? this.player.y : temp2)-(temp == null ? this.player.y : temp);
+
+    // Calculate the angle in degrees
+    // const angle = Phaser.Math.RadToDeg(Math.atan2(tangent.y, tangent.x));
+
+    // Set the player's angle
+    // this.player.setAngle(angle);
+
+    const temp1 = this.getYForX(this.player.x-20);
+    const temp2 = this.getYForX(this.player.x+20);
+    if(temp1!=null && temp2!=null){
+        const angle2 = Phaser.Math.RadToDeg(Math.atan2(temp2-temp1, 40));
+        let angle = 0;
+        if(angle2>=-15&&angle2<=15) angle=0;
+        else if(angle2>=-45&&angle2<=-15) angle=-30;
+        else if(angle2<-45) angle=-60;
+        else if(angle2>=15&&angle2<=45) angle=30;
+        else if(angle2>45) angle=60;
+        this.player.setAngle(angle/2)
+    }
   }
 
   changeScene() {

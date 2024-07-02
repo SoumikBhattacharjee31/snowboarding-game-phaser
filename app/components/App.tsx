@@ -82,7 +82,7 @@ function App()
     }
 
     return (
-        <div id="app">
+        <div id="app" className='flex'>
             <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
             <div>
                 <div>

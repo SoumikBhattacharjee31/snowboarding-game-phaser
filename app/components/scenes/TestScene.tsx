@@ -7,25 +7,17 @@ export class TestScene extends Scene {
   private curve!: Phaser.Curves.Spline;
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private curvePoints!: Phaser.Math.Vector2[];
-  private curveProgress: number = 0;
+  private curveIndex: number = 0;
+  private isJumping: boolean = false;
 
   constructor() {
     super("TestScene");
   }
 
-//   preload() {
-//     // Load your assets here
-//     this.load.image("snowybg", "path/to/snowybg.png");
-//     this.load.image("snowboarder", "path/to/snowboarder.png");
-//     this.load.image("background", "path/to/background.png");
-//   }
-
   create() {
-    // Create and scale the snowy background
     const { width, height } = this.scale;
     this.snowybg = this.add.tileSprite(0, 0, width, height, "snowybg").setScale(2).setOrigin(0, 0);
 
-    // Add graphics to draw the curve
     this.graphics = this.add.graphics();
     this.curvePoints = [
       new Phaser.Math.Vector2(-300, 100),
@@ -43,40 +35,29 @@ export class TestScene extends Scene {
     this.graphics.lineStyle(2, 0xffffff, 1);
     this.curve.draw(this.graphics, 128);
 
-    // Create the player sprite
     this.player = this.physics.add.sprite(100, 300, "snowboarder").setScale(0.05);
-    // this.player.setCollideWorldBounds(true);
+    this.player.setCollideWorldBounds(true);
+    this.player.setGravityY(0); // Prevent gravity from affecting the player
 
-    // Emit an event to notify that the current scene is ready
+    if (this.input.keyboard) {
+      this.input.keyboard.on("keydown-F", this.jump, this);
+    }
+
     EventBus.emit("current-scene-ready", this);
   }
 
   update(time: number, delta: number): void {
-    // Move the background to create a parallax effect
     this.snowybg.tilePositionX += 0.1;
+    this.moveCurve(-1);
 
-    // Move the curve to the left
-    this.moveCurve(-1); // Adjust the speed as needed
-
-    // Update the player position along the curve
-    // this.curveProgress += delta * 0.00008; // Adjust speed as needed
-    // if (this.curveProgress > 1) {
-    //   this.curveProgress -= 1;
-    // }
-    // const point = this.curve.getPoint(this.curveProgress);
     const temp = this.getYForX(this.player.x);
-    this.player.y = temp == null ? this.player.y : (temp-25);
-
-    // Calculate the tangent of the curve at the current position
-    // const tangent = this.curve.getTangent(this.curveProgress);
-    // const temp2 = this.getYForX(this.player.x+1);
-    // const tangent = (temp2 == null ? this.player.y : temp2)-(temp == null ? this.player.y : temp);
-
-    // Calculate the angle in degrees
-    // const angle = Phaser.Math.RadToDeg(Math.atan2(tangent.y, tangent.x));
-
-    // Set the player's angle
-    // this.player.setAngle(angle);
+    if (temp!=null) {
+      console.log(temp);
+      if(!this.isJumping)
+        this.player.y = temp-25;
+      else if(this.player.y>temp)
+        this.isJumping=false;
+    }
 
     const temp1 = this.getYForX(this.player.x-20);
     const temp2 = this.getYForX(this.player.x+20);
@@ -90,6 +71,33 @@ export class TestScene extends Scene {
         else if(angle2>45) angle=60;
         this.player.setAngle(angle/2)
     }
+
+    this.fillBelowCurve();
+  }
+
+  jump() {
+    if (!this.isJumping) {
+      // this.player.y-=40;
+      this.isJumping = true;
+      this.player.setVelocityY(-70);
+      // this.time.delayedCall(500, () => {
+      //   this.player.setVelocityY(0);
+      //   this.isJumping = false;
+      // });
+    }
+  }
+
+  fillBelowCurve() {
+    const { width, height } = this.scale;
+    this.graphics.fillStyle(0xffffff, 1);
+    this.graphics.beginPath();
+    this.graphics.moveTo(0, height);
+    this.curvePoints.forEach(point => {
+      this.graphics.lineTo(point.x, point.y);
+    });
+    this.graphics.lineTo(width, height);
+    this.graphics.closePath();
+    this.graphics.fillPath();
   }
 
   changeScene() {

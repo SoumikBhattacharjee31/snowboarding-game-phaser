@@ -10,8 +10,8 @@ import { TestScene } from './scenes/TestScene';
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    width: 1024,
-    height: 768,
+    width: 800,
+    height: 600,
     parent: 'game-container',
     backgroundColor: '#028af8',
     scene: [
@@ -26,7 +26,7 @@ const config: Phaser.Types.Core.GameConfig = {
         default: 'arcade',
         arcade: {
             debug: false,
-            gravity: {x:0,y:1}
+            gravity: {x:0,y:20}
         }
     }
 };

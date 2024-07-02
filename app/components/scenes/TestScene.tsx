@@ -59,11 +59,11 @@ export class TestScene extends Scene {
     this.moveCurve(-1); // Adjust the speed as needed
 
     // Update the player position along the curve
-    this.curveProgress += delta * 0.00008; // Adjust speed as needed
-    if (this.curveProgress > 1) {
-      this.curveProgress -= 1;
-    }
-    const point = this.curve.getPoint(this.curveProgress);
+    // this.curveProgress += delta * 0.00008; // Adjust speed as needed
+    // if (this.curveProgress > 1) {
+    //   this.curveProgress -= 1;
+    // }
+    // const point = this.curve.getPoint(this.curveProgress);
     const temp = this.getYForX(this.player.x);
     this.player.y = temp == null ? this.player.y : (temp-25);
 

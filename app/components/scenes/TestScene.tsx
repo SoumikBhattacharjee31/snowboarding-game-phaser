@@ -9,6 +9,7 @@ export class TestScene extends Scene {
   private curvePoints!: Phaser.Math.Vector2[];
   private curveIndex: number = 0;
   private isJumping: boolean = false;
+  private obstacles!: Phaser.Physics.Arcade.Group;
 
   constructor() {
     super("TestScene");
@@ -43,7 +44,34 @@ export class TestScene extends Scene {
       this.input.keyboard.on("keydown-F", this.jump, this);
     }
 
+    this.obstacles = this.physics.add.group();
+    this.time.addEvent({
+      delay: 2000,
+      callback: this.addObstacle,
+      callbackScope: this,
+      loop: true
+    });
+    this.physics.add.collider(this.player, this.obstacles, this.handleCollision, undefined, this);
+
     EventBus.emit("current-scene-ready", this);
+  }
+
+  addObstacle() {
+    const obstacleType = Phaser.Math.Between(0, 1) === 0 ? "bird" : "stone";
+    const temp = this.getYForX(this.scale.width+50);
+    const temp2 = temp==null?-100:temp;
+    const x = this.scale.width + 50;
+    const y = obstacleType === "bird" ? Phaser.Math.Between(50, temp2-50) : temp2 - 50;
+    const obstacle = this.obstacles.create(x, y, obstacleType) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+
+    obstacle.setVelocityX(-100);
+    obstacle.setScale(0.04);
+    obstacle.setOrigin(0.5, 0.5);
+    obstacle.body.setAllowGravity(false);
+  }
+
+  handleCollision(player: any, obstacle: any) {
+    this.scene.start("MainMenu");
   }
 
   update(time: number, delta: number): void {
@@ -52,7 +80,6 @@ export class TestScene extends Scene {
 
     const temp = this.getYForX(this.player.x);
     if (temp!=null) {
-      console.log(temp);
       if(!this.isJumping)
         this.player.y = temp-25;
       else if(this.player.y>temp)
@@ -73,6 +100,7 @@ export class TestScene extends Scene {
     }
 
     this.fillBelowCurve();
+    // this.graphics.fillPoints(this.curve.getPoints())
   }
 
   jump() {
@@ -89,15 +117,23 @@ export class TestScene extends Scene {
 
   fillBelowCurve() {
     const { width, height } = this.scale;
+    const points = this.curve.getSpacedPoints(500); // Increase the number of points for better accuracy
+  
     this.graphics.fillStyle(0xffffff, 1);
     this.graphics.beginPath();
     this.graphics.moveTo(0, height);
-    this.curvePoints.forEach(point => {
+  
+    points.forEach(point => {
       this.graphics.lineTo(point.x, point.y);
     });
+  
     this.graphics.lineTo(width, height);
     this.graphics.closePath();
     this.graphics.fillPath();
+  }
+  
+
+  alternatefill() {
   }
 
   changeScene() {

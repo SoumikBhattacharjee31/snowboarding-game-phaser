@@ -15,13 +15,6 @@ export class TestScene extends Scene {
     super("TestScene");
   }
 
-  preload() {
-    this.load.image("bird", "path/to/bird.png");
-    this.load.image("stone", "path/to/stone.png");
-    this.load.image("snowybg", "path/to/snowybg.png");
-    this.load.image("snowboarder", "path/to/snowboarder.png");
-  }
-
   create() {
     const { width, height } = this.scale;
     this.snowybg = this.add.tileSprite(0, 0, width, height, "snowybg").setScale(2).setOrigin(0, 0);
@@ -58,7 +51,6 @@ export class TestScene extends Scene {
       callbackScope: this,
       loop: true
     });
-
     this.physics.add.collider(this.player, this.obstacles, this.handleCollision, undefined, this);
 
     EventBus.emit("current-scene-ready", this);

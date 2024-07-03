@@ -17,58 +17,100 @@ export class TestScene extends Scene {
 
   create() {
     const { width, height } = this.scale;
-    this.snowybg = this.add.tileSprite(0, 0, width, height, "snowybg").setScale(2).setOrigin(0, 0);
-
+  
+    // Add snowy background
+    this.snowybg = this.add
+      .tileSprite(0, 0, width, height, "snowybg")
+      .setScale(2)
+      .setOrigin(0, 0);
+  
+    // Add obstacles group
+    this.obstacles = this.physics.add.group();
+  
+    // Add player
+    this.player = this.physics.add
+      .sprite(100, 300, "snowboarder")
+      .setScale(0.05);
+    this.player.setCollideWorldBounds(true);
+    this.player.body.setAllowGravity(false);
+  
+    // Add graphics for snow curve
     this.graphics = this.add.graphics();
     this.curvePoints = [
-      new Phaser.Math.Vector2(-300, 100),
-      new Phaser.Math.Vector2(-100, 300),
-      new Phaser.Math.Vector2(100, 300),
-      new Phaser.Math.Vector2(300, 400),
-      new Phaser.Math.Vector2(500, 200),
+      new Phaser.Math.Vector2(-300, 200),
+      new Phaser.Math.Vector2(-100, 250),
+      new Phaser.Math.Vector2(100, 200),
+      new Phaser.Math.Vector2(300, 300),
+      new Phaser.Math.Vector2(500, 250),
       new Phaser.Math.Vector2(700, 300),
       new Phaser.Math.Vector2(900, 200),
-      new Phaser.Math.Vector2(1100,400),
-      new Phaser.Math.Vector2(1300,400),
-      new Phaser.Math.Vector2(1500,100),
+      new Phaser.Math.Vector2(1100, 300),
+      new Phaser.Math.Vector2(1300, 250),
+      new Phaser.Math.Vector2(1500, 200),
     ];
     this.curve = new Phaser.Curves.Spline(this.curvePoints);
     this.graphics.lineStyle(2, 0xffffff, 1);
     this.curve.draw(this.graphics, 128);
-
-    this.player = this.physics.add.sprite(100, 300, "snowboarder").setScale(0.05);
-    this.player.setCollideWorldBounds(true);
-    this.player.setGravityY(0); // Prevent gravity from affecting the player
-
+  
+    // Initialize player controls
     if (this.input.keyboard) {
       this.input.keyboard.on("keydown-F", this.jump, this);
     }
-
-    this.obstacles = this.physics.add.group();
+  
+    // Add obstacle spawn event
     this.time.addEvent({
       delay: 2000,
       callback: this.addObstacle,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
-    this.physics.add.collider(this.player, this.obstacles, this.handleCollision, undefined, this);
-
+  
+    // Add collision handler
+    this.physics.add.collider(
+      this.player,
+      this.obstacles,
+      this.handleCollision,
+      undefined,
+      this
+    );
+  
+    // Emit scene ready event
     EventBus.emit("current-scene-ready", this);
   }
+  
 
   addObstacle() {
     const obstacleType = Phaser.Math.Between(0, 1) === 0 ? "bird" : "stone";
-    const temp = this.getYForX(this.scale.width+50);
-    const temp2 = temp==null?-100:temp;
+    const temp = this.getYForX(this.scale.width + 50);
+    const temp2 = temp == null ? -100 : temp;
     const x = this.scale.width + 50;
-    const y = obstacleType === "bird" ? Phaser.Math.Between(50, temp2-50) : temp2 - 50;
-    const obstacle = this.obstacles.create(x, y, obstacleType) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    const y =
+        obstacleType === "bird"
+            ? Phaser.Math.Between(50, temp2 - 50)
+            : temp2 - 10;
+    const obstacle = this.obstacles.create(
+        x,
+        y,
+        obstacleType
+    ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
     obstacle.setVelocityX(-100);
     obstacle.setScale(0.04);
     obstacle.setOrigin(0.5, 0.5);
     obstacle.body.setAllowGravity(false);
-  }
+
+    // Set a smaller hitbox for the obstacle
+    const hitboxWidth = obstacle.displayWidth * 5;  // 50% of the sprite's width
+    const hitboxHeight = obstacle.displayHeight * 8;  // 50% of the sprite's height
+    obstacle.body.setSize(hitboxWidth, hitboxHeight);
+
+    // Optionally adjust the hitbox position relative to the sprite
+    // obstacle.body.setOffset(
+    //     (obstacle.displayWidth - hitboxWidth) / 2,
+    //     (obstacle.displayHeight - hitboxHeight) / 2
+    // );
+}
+
 
   handleCollision(player: any, obstacle: any) {
     this.scene.start("MainMenu");
@@ -79,24 +121,27 @@ export class TestScene extends Scene {
     this.moveCurve(-1);
 
     const temp = this.getYForX(this.player.x);
-    if (temp!=null) {
-      if(!this.isJumping)
-        this.player.y = temp-25;
-      else if(this.player.y>temp)
-        this.isJumping=false;
+    if (temp != null) {
+      if (!this.isJumping) {
+        this.player.y = temp - 25;
+      }
+      else if (this.player.y > temp-15) {
+        this.isJumping = false;
+        this.player.body.setAllowGravity(false);
+      }
     }
 
-    const temp1 = this.getYForX(this.player.x-20);
-    const temp2 = this.getYForX(this.player.x+20);
-    if(temp1!=null && temp2!=null){
-        const angle2 = Phaser.Math.RadToDeg(Math.atan2(temp2-temp1, 40));
-        let angle = 0;
-        if(angle2>=-15&&angle2<=15) angle=0;
-        else if(angle2>=-45&&angle2<=-15) angle=-30;
-        else if(angle2<-45) angle=-60;
-        else if(angle2>=15&&angle2<=45) angle=30;
-        else if(angle2>45) angle=60;
-        this.player.setAngle(angle/2)
+    const temp1 = this.getYForX(this.player.x - 20);
+    const temp2 = this.getYForX(this.player.x + 20);
+    if (temp1 != null && temp2 != null) {
+      const angle2 = Phaser.Math.RadToDeg(Math.atan2(temp2 - temp1, 40));
+      let angle = 0;
+      if (angle2 >= -15 && angle2 <= 15) angle = 0;
+      else if (angle2 >= -45 && angle2 <= -15) angle = -30;
+      else if (angle2 < -45) angle = -60;
+      else if (angle2 >= 15 && angle2 <= 45) angle = 30;
+      else if (angle2 > 45) angle = 60;
+      this.player.setAngle(angle / 2);
     }
 
     this.fillBelowCurve();
@@ -105,9 +150,11 @@ export class TestScene extends Scene {
 
   jump() {
     if (!this.isJumping) {
-      // this.player.y-=40;
+      this.player.y-=20;
+      this.player.body.setAllowGravity(true);
       this.isJumping = true;
-      this.player.setVelocityY(-70);
+      this.player.setVelocityY(-200);
+      this.player.body.setGravityY(200);
       // this.time.delayedCall(500, () => {
       //   this.player.setVelocityY(0);
       //   this.isJumping = false;
@@ -118,22 +165,18 @@ export class TestScene extends Scene {
   fillBelowCurve() {
     const { width, height } = this.scale;
     const points = this.curve.getSpacedPoints(500); // Increase the number of points for better accuracy
-  
+
     this.graphics.fillStyle(0xffffff, 1);
     this.graphics.beginPath();
     this.graphics.moveTo(0, height);
-  
-    points.forEach(point => {
+
+    points.forEach((point) => {
       this.graphics.lineTo(point.x, point.y);
     });
-  
+
     this.graphics.lineTo(width, height);
     this.graphics.closePath();
     this.graphics.fillPath();
-  }
-  
-
-  alternatefill() {
   }
 
   changeScene() {
@@ -162,7 +205,7 @@ export class TestScene extends Scene {
 
   private moveCurve(deltaX: number) {
     // Move each point of the curve by deltaX
-    this.curvePoints.forEach(point => {
+    this.curvePoints.forEach((point) => {
       point.x += deltaX;
     });
 
@@ -171,7 +214,7 @@ export class TestScene extends Scene {
       this.curvePoints.shift();
       const lastPoint = this.curvePoints[this.curvePoints.length - 1];
       const newX = lastPoint.x + 200; // distance between points
-      const newY = Phaser.Math.Between(200, 400); // random y position
+      const newY = Phaser.Math.Between(200, 300); // random y position
       this.curvePoints.push(new Phaser.Math.Vector2(newX, newY));
     }
 

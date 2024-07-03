@@ -19,5 +19,10 @@ export class MainMenuScene extends Scene {
     highScoresButton.on('pointerdown', () => {
       this.scene.start('HighScoresScene');
     });
+    
+    const exitButton = this.add.text(width / 2, height / 2 + 200, 'Exit', { fontSize: '32px', color: '#fff' }).setOrigin(0.5).setInteractive();
+    exitButton.on('pointerdown', () => {
+    //   this.scene.start('HighScoresScene');
+    });
   }
 }

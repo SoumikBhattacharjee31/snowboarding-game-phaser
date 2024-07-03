@@ -10,12 +10,15 @@ export class TestScene extends Scene {
   private curveIndex: number = 0;
   private isJumping: boolean = false;
   private obstacles!: Phaser.Physics.Arcade.Group;
+  private score: number = 0;
+  private scoreText!: Phaser.GameObjects.Text;
 
   constructor() {
     super("TestScene");
   }
 
   create() {
+    this.score=0;
     const { width, height } = this.scale;
   
     // Add snowy background
@@ -74,6 +77,9 @@ export class TestScene extends Scene {
       this
     );
   
+    // Add score text
+    this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', color: '#fff' });
+  
     // Emit scene ready event
     EventBus.emit("current-scene-ready", this);
   }
@@ -111,9 +117,8 @@ export class TestScene extends Scene {
     // );
 }
 
-
   handleCollision(player: any, obstacle: any) {
-    this.scene.start("MainMenu");
+    this.scene.start("GameOverScene", { score: this.score });
   }
 
   update(time: number, delta: number): void {
@@ -145,7 +150,12 @@ export class TestScene extends Scene {
     }
 
     this.fillBelowCurve();
-    // this.graphics.fillPoints(this.curve.getPoints())
+    this.updateScore(delta);
+  }
+
+  updateScore(delta: number) {
+    this.score += delta * 0.01;
+    this.scoreText.setText('Score: ' + Math.floor(this.score));
   }
 
   jump() {

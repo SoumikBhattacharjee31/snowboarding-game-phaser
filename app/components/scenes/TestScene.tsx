@@ -12,31 +12,32 @@ export class TestScene extends Scene {
   private obstacles!: Phaser.Physics.Arcade.Group;
   private score: number = 0;
   private scoreText!: Phaser.GameObjects.Text;
+  private velocity: number = 100; // Base velocity for consistent movement
 
   constructor() {
     super("TestScene");
   }
 
   create() {
-    this.score=0;
+    this.score = 0;
     const { width, height } = this.scale;
-  
+
     // Add snowy background
     this.snowybg = this.add
       .tileSprite(0, 0, width, height, "snowybg")
       .setScale(2)
       .setOrigin(0, 0);
-  
+
     // Add obstacles group
     this.obstacles = this.physics.add.group();
-  
+
     // Add player
     this.player = this.physics.add
       .sprite(100, 300, "snowboarder")
       .setScale(0.05);
     this.player.setCollideWorldBounds(true);
     this.player.body.setAllowGravity(false);
-  
+
     // Add graphics for snow curve
     this.graphics = this.add.graphics();
     this.curvePoints = [
@@ -54,12 +55,12 @@ export class TestScene extends Scene {
     this.curve = new Phaser.Curves.Spline(this.curvePoints);
     this.graphics.lineStyle(2, 0xffffff, 1);
     this.curve.draw(this.graphics, 128);
-  
+
     // Initialize player controls
     if (this.input.keyboard) {
       this.input.keyboard.on("keydown-F", this.jump, this);
     }
-  
+
     // Add obstacle spawn event
     this.time.addEvent({
       delay: 2000,
@@ -67,7 +68,7 @@ export class TestScene extends Scene {
       callbackScope: this,
       loop: true,
     });
-  
+
     // Add collision handler
     this.physics.add.collider(
       this.player,
@@ -76,14 +77,13 @@ export class TestScene extends Scene {
       undefined,
       this
     );
-  
+
     // Add score text
     this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', color: '#fff' });
-  
+
     // Emit scene ready event
     EventBus.emit("current-scene-ready", this);
   }
-  
 
   addObstacle() {
     const obstacleType = Phaser.Math.Between(0, 1) === 0 ? "bird" : "stone";
@@ -91,16 +91,15 @@ export class TestScene extends Scene {
     const temp2 = temp == null ? -100 : temp;
     const x = this.scale.width + 50;
     const y =
-        obstacleType === "bird"
-            ? Phaser.Math.Between(50, temp2 - 50)
-            : temp2 - 10;
+      obstacleType === "bird"
+        ? Phaser.Math.Between(50, temp2 - 50)
+        : temp2 - 10;
     const obstacle = this.obstacles.create(
-        x,
-        y,
-        obstacleType
+      x,
+      y,
+      obstacleType
     ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    obstacle.setVelocityX(-100);
     obstacle.setScale(0.04);
     obstacle.setOrigin(0.5, 0.5);
     obstacle.body.setAllowGravity(false);
@@ -110,27 +109,24 @@ export class TestScene extends Scene {
     const hitboxHeight = obstacle.displayHeight * 8;  // 50% of the sprite's height
     obstacle.body.setSize(hitboxWidth, hitboxHeight);
 
-    // Optionally adjust the hitbox position relative to the sprite
-    // obstacle.body.setOffset(
-    //     (obstacle.displayWidth - hitboxWidth) / 2,
-    //     (obstacle.displayHeight - hitboxHeight) / 2
-    // );
-}
+    // Set velocity based on delta time
+    obstacle.setVelocityX(-this.velocity);
+  }
 
   handleCollision(player: any, obstacle: any) {
     this.scene.start("GameOverScene", { score: this.score });
   }
 
   update(time: number, delta: number): void {
+    const deltaVelocity = this.velocity * delta * 0.001; // Adjust based on delta time
     this.snowybg.tilePositionX += 0.1;
-    this.moveCurve(-1);
+    this.moveCurve(-deltaVelocity);
 
     const temp = this.getYForX(this.player.x);
     if (temp != null) {
       if (!this.isJumping) {
         this.player.y = temp - 25;
-      }
-      else if (this.player.y > temp-15) {
+      } else if (this.player.y > temp - 15) {
         this.isJumping = false;
         this.player.body.setAllowGravity(false);
       }
@@ -160,15 +156,11 @@ export class TestScene extends Scene {
 
   jump() {
     if (!this.isJumping) {
-      this.player.y-=20;
+      this.player.y -= 20;
       this.player.body.setAllowGravity(true);
       this.isJumping = true;
       this.player.setVelocityY(-200);
       this.player.body.setGravityY(200);
-      // this.time.delayedCall(500, () => {
-      //   this.player.setVelocityY(0);
-      //   this.isJumping = false;
-      // });
     }
   }
 
